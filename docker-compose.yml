@@ -1,0 +1,77 @@
+version: '3'
+
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./dbdata:/data/db
+      - ./mongobackups:/var/backups/mongobackups
+    ports:
+      - 27017:27017
+    networks: 
+      - blearn
+
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - 6379:6379
+    networks:
+      - blearn
+  
+  blearn-frontend:
+    image: blearn-frontend
+    container_name: blearn-frontend
+    env_file:
+      - .env
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+    volumes:
+      - ./nginx/conf/custom.conf:/etc/nginx/conf.d/default.conf
+      - ./certbot/www:/var/www/certbot/:ro
+      - ./certbot/conf/:/etc/nginx/ssl/:ro
+    command: "/bin/sh -c 'while :; do sleep 24h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    networks:
+      - blearn
+  
+  certbot:
+    image: certbot/certbot:latest
+    container_name: certbot
+    volumes:
+      - ./certbot/www/:/var/www/certbot/:rw
+      - ./certbot/conf/:/etc/letsencrypt/:rw
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 24h & wait $${!}; done;'"
+    networks:
+      - blearn
+
+  api:
+    image: blearn-api
+    container_name: api
+    env_file:
+      - .env
+    ports:
+      - 3000:3000
+    restart: always
+    command: "/bin/sh -c 'cd /app/backend ; yarn start'"
+    networks:
+      - blearn
+
+  mcq:
+    image: blearn-mcq
+    container_name: mcq
+    env_file:
+      - .env
+    restart: always
+    networks:
+      - blearn
+
+networks:
+  blearn:
+    driver: bridge
