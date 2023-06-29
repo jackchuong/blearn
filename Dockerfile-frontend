@@ -3,11 +3,16 @@ ENV NODE_OPTIONS=--max_old_space_size=8192
 WORKDIR /app
 COPY ./ ./
 
+WORKDIR /app/bLearnCms
 RUN yarn install --prefer-offline
 RUN yarn build-lib
-
 RUN yarn build-frontend
+
+WORKDIR /app/bLearn
+RUN yarn install --prefer-offline
+RUN yarn build
 
 FROM nginx as frontendimage
 
-COPY --chown=nginx --from=build /app/frontend/build /usr/share/nginx/html
+COPY --chown=nginx --from=build /app/bLearn/build /var/www/mcq
+COPY --chown=nginx --from=build /app/bLearnCms/frontend/build /var/www/cms

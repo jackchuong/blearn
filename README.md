@@ -54,7 +54,6 @@ JWT_VERIFY_TOKEN_SECRET=secret
 ```
 docker build -f Dockerfile-frontend -t blearn-frontend ./sourcecode
 docker build -f Dockerfile-api -t blearn-api ./sourcecode
-docker build -f Dockerfile-mcq -t blearn-mcq ./sourcecode
 ```
 
 - start blearn services, commands below
